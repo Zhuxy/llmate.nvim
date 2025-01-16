@@ -52,8 +52,8 @@ local function handle_generate(config_set, prompt_set, selected_text, signal, re
   prompt_template = prompt_template:gsub("{{selected_text}}", text)
   prompt_template = prompt_template:gsub("{{user_prompt}}", signal.prompt:get_value())
 
-  print("~~~~~~~~~prompt~~~~~~~~~~~\n")
-  print(prompt_template)
+  -- print("~~~~~~~~~prompt~~~~~~~~~~~\n")
+  -- print(prompt_template)
 
   signal.result = ""
 
@@ -72,15 +72,19 @@ local function handle_generate(config_set, prompt_set, selected_text, signal, re
       if chunk == nil or chunk == "[[DONE]]" then
         signal.is_loading = false
         signal.first_loading = false
+        signal.is_cancel = false
         renderer:get_component_by_id("cancel_btn"):focus()
 
-        print("~~~~~~~~~result~~~~~~~~~~~\n")
-        print(signal.result:get_value())
-        print("~~~~~~~~~ end  ~~~~~~~~~~~\n")
+        -- print("~~~~~~~~~result~~~~~~~~~~~\n")
+        -- print(signal.result:get_value())
+        -- print("~~~~~~~~~ end  ~~~~~~~~~~~\n")
 
         return
       end
 
+      if signal.is_cancel:get_value() then
+        return
+      end
       signal.result = signal.result:get_value() .. chunk
 
       local lines = vim.split(signal.result:get_value(), "\n", { plain = true })
@@ -348,6 +352,9 @@ M.open_dialog = function(plugin_config, selected_text)
     prompt_editing = false,
     prompt_saving = false,
     prompt_to_save = "",
+
+    -- status for controlling cancel
+    is_cancel = false,
   })
 
   local buf = vim.api.nvim_create_buf(false, true)
@@ -377,12 +384,10 @@ M.open_dialog = function(plugin_config, selected_text)
           return selection
         end),
         on_change = function(option) -- called when option is actived
-          print("on change:" .. option.title)
           signal.prompt = option.prompt
           signal.prompt_to_save = option.title
         end,
         on_select = function(option) -- called when option is selected
-          print("on select:" .. option.title)
           signal.prompt = option.prompt
           signal.prompt_to_save = option.title
           renderer:get_component_by_id("prompt"):focus()
@@ -408,7 +413,7 @@ M.open_dialog = function(plugin_config, selected_text)
         prefix = " > ",
         placeholder = "Use same name to overwrite",
         border_label = {
-          text = "Save current prompt to ...",
+          text = "✍️ Save current prompt to ...",
           align = "center",
         },
         hidden = signal.prompt_saving:negate(),
@@ -522,6 +527,23 @@ M.open_dialog = function(plugin_config, selected_text)
       )
     )
   end
+
+  renderer:add_mappings({
+    {
+      mode = { "n" },
+      key = "<ESC>",
+      handler = function()
+        if signal.is_loading:get_value() then
+          signal.is_cancel = true
+          signal.is_loading = false
+          vim.notify("Text generation cancelled.", vim.log.levels.WARN)
+          return
+        else
+          renderer:close()
+        end
+      end,
+    },
+  })
 
   renderer:on_unmount(function()
     -- back to original window
