@@ -1,0 +1,13 @@
+llmate-commands	llmate.txt	/*llmate-commands*
+llmate-configuration	llmate.txt	/*llmate-configuration*
+llmate-contents	llmate.txt	/*llmate-contents*
+llmate-installation	llmate.txt	/*llmate-installation*
+llmate-introduction	llmate.txt	/*llmate-introduction*
+llmate-license	llmate.txt	/*llmate-license*
+llmate-mappings	llmate.txt	/*llmate-mappings*
+llmate-requirements	llmate.txt	/*llmate-requirements*
+llmate-usage	llmate.txt	/*llmate-usage*
+llmate.txt	llmate.txt	/*llmate.txt*
+:LLMateComplete	llmate.txt	/*:LLMateComplete*
+:LLMateExplain	llmate.txt	/*:LLMateExplain*
+:LLMateRefactor	llmate.txt	/*:LLMateRefactor*
