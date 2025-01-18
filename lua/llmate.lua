@@ -1,12 +1,15 @@
 -- main module file
 local module = require("llmate.module")
+local debug = require("llmate.debug")
 
 ---@class Config Configuration for the llmate.nvim plugin
 ---@field key string Keybinding to launch the dialog (default: <leader>g)
 ---@field data_path string? Optional path to the directory containing configuration files
+---@field debug boolean Enable debug mode for verbose logging (default: false)
 local config = {
   key = "<leader>g",
   data_path = nil,
+  debug = false,
 }
 
 ---@class MyModule Main module for the llmate.nvim plugin
@@ -20,6 +23,12 @@ M.config = config
 ---@return nil
 M.setup = function(args)
   M.config = vim.tbl_deep_extend("force", M.config, args or {})
+  
+  -- Initialize debug mode
+  debug.set_debug(M.config.debug)
+  if M.config.debug then
+    debug.log("Debug mode enabled")
+  end
 
   vim.keymap.set("x", M.config.key, "<cmd>lua require('llmate').open_dialog()<CR>", { silent = true, noremap = true })
 

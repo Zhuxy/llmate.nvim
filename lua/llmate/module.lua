@@ -1,6 +1,7 @@
 local backend = require("backend")
 local n = require("nui-components")
 local c = require("llmate.config")
+local debug = require("llmate.debug")
 local spinner_formats = require("nui-components.utils.spinner-formats")
 
 ---@class CustomModule
@@ -21,7 +22,7 @@ local M = {}
 ---@field text string Prompt content
 
 ---@class Signal
----@field prompt string Current prompt text
+---@field user_prompt string Current user prompt text
 ---@field result string Current result text
 ---@field prompt_set PromptSet Current prompt set
 ---@field prompt_to_save string Title of prompt to save
@@ -41,6 +42,7 @@ local M = {}
 local function handle_generate(config_set, prompt_set, selected_text, signal, renderer, buf)
   if signal.is_loading:get_value() then
     vim.notify("Text generation is already in progress. Please wait.", vim.log.levels.WARN)
+    debug.log("Text generation skipped - already in progress")
     return
   end
 
@@ -49,8 +51,11 @@ local function handle_generate(config_set, prompt_set, selected_text, signal, re
 
   local prompt_template = prompt_set.prompt_template
   local text = table.concat(selected_text.lines, "\n")
-  prompt_template = prompt_template:gsub("{{selected_text}}", text)
-  prompt_template = prompt_template:gsub("{{user_prompt}}", signal.prompt:get_value())
+  local prompt = prompt_template:gsub("{{selected_text}}", text)
+  prompt = prompt:gsub("{{user_prompt}}", signal.user_prompt:get_value())
+
+  debug.log("Generating text with prompt: %s", prompt)
+  debug.log("Selected text: %s", text)
 
   -- print("~~~~~~~~~prompt~~~~~~~~~~~\n")
   -- print(prompt_template)
@@ -65,7 +70,7 @@ local function handle_generate(config_set, prompt_set, selected_text, signal, re
       api_base = config_set.api_base,
       model = config_set.model,
       max_tokens = config_set.max_tokens,
-      prompt = prompt_template,
+      prompt = prompt,
     }
 
     backend.chat_stream(chat_req, function(chunk)
@@ -206,7 +211,7 @@ local function handler_save_promt(title, signal, renderer, plugin_config)
       found = i
       table.insert(new_prompts, {
         title = title,
-        text = signal.prompt:get_value(),
+        text = signal.user_prompt:get_value(),
       })
     else
       table.insert(new_prompts, {
@@ -219,13 +224,13 @@ local function handler_save_promt(title, signal, renderer, plugin_config)
   if found == 0 then
     table.insert(new_prompts, {
       title = title,
-      text = signal.prompt:get_value(),
+      text = signal.user_prompt:get_value(),
     })
 
     -- if add new prompt, it will be added to the end, so we will set signal.prompt to original
     for _, prompt in ipairs(prompts) do
       if prompt.title == original_title then
-        signal.prompt = prompt.text
+        signal.user_prompt = prompt.text
       end
     end
   end
@@ -239,7 +244,7 @@ local function handler_save_promt(title, signal, renderer, plugin_config)
 
   signal.prompt_saving = false
   vim.defer_fn(function()
-    renderer:get_component_by_id("prompt"):focus()
+    renderer:get_component_by_id("user_prompt"):focus()
   end, 300)
 end
 
@@ -288,7 +293,7 @@ local function handle_delete_prompt(signal, renderer, plugin_config)
 
   -- update prompt_to_save
   signal.prompt_to_save = new_prompts[next_one].title
-  signal.prompt = new_prompts[next_one].text
+  signal.user_prompt = new_prompts[next_one].text
 
   c.write_prompt_set(plugin_config, signal.prompt_set:get_value())
 
@@ -324,10 +329,12 @@ end
 ---@param selected_text VisualSelection Selected text from editor
 ---@return nil
 M.open_dialog = function(plugin_config, selected_text)
+  debug.log("Opening dialog with config: %s", vim.inspect(plugin_config))
   init_hightlight_group()
 
   local config_set = c.load_config_set(plugin_config)
   local prompt_set = c.load_prompt_set(plugin_config)
+  debug.log("Loaded config set: %s", vim.inspect(config_set))
 
   local renderer = n.create_renderer({
     position = {
@@ -341,7 +348,7 @@ M.open_dialog = function(plugin_config, selected_text)
 
   local signal = n.create_signal({
     prompt_set = prompt_set,
-    prompt = prompt_set.prompts[1].text,
+    user_prompt = prompt_set.prompts[1].text,
     result = "",
 
     -- status for showing append/replace/yank buttons
@@ -384,22 +391,22 @@ M.open_dialog = function(plugin_config, selected_text)
           return selection
         end),
         on_change = function(option) -- called when option is actived
-          signal.prompt = option.prompt
+          signal.user_prompt = option.prompt
           signal.prompt_to_save = option.title
         end,
         on_select = function(option) -- called when option is selected
-          signal.prompt = option.prompt
+          signal.user_prompt = option.prompt
           signal.prompt_to_save = option.title
-          renderer:get_component_by_id("prompt"):focus()
+          renderer:get_component_by_id("user_prompt"):focus()
         end,
       }),
       n.text_input({
-        id = "prompt",
+        id = "user_prompt",
         border_label = "👌 Ok I will tell you ...",
         size = 4,
-        value = signal.prompt,
+        value = signal.user_prompt,
         on_change = function(value)
-          signal.prompt = value
+          signal.user_prompt = value
         end,
         on_focus = function()
           signal.prompt_editing = true
