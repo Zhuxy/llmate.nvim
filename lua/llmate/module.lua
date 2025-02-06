@@ -1,4 +1,4 @@
-local backend = require("backend")
+local backend = require("llmate.backend")
 local n = require("nui-components")
 local c = require("llmate.config")
 local debug = require("llmate.debug")

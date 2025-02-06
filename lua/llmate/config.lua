@@ -1,3 +1,5 @@
+local backend = require("llmate.backend")
+
 local M = {}
 
 local DEFAULT_PROMPT_SET = {
@@ -66,7 +68,7 @@ M.load_config_set = function(plugin_config)
     return nil
   end
 
-  return require("backend").read_config_set(config_path)
+  return backend.read_config_set(config_path)
 end
 
 M.load_prompt_set = function(plugin_config)
@@ -86,11 +88,17 @@ M.load_prompt_set = function(plugin_config)
 
   -- check if file existed
   if not vim.loop.fs_stat(file_path) then
-    require("backend").write_prompt_set(file_path, DEFAULT_PROMPT_SET)
+    backend.write_prompt_set(file_path, DEFAULT_PROMPT_SET)
     return DEFAULT_PROMPT_SET
   end
 
-  return require("backend").read_prompt_set(file_path)
+  local prompt_set = backend.read_prompt_set(file_path)
+  print("read prompt set from: " .. file_path)
+  -- print all in prompt_set
+  for k, v in pairs(prompt_set) do
+    print(k, v)
+  end
+  return prompt_set
 end
 
 M.write_prompt_set = function(plugin_config, prompt_set)
@@ -102,7 +110,7 @@ M.write_prompt_set = function(plugin_config, prompt_set)
   end
   local file_path = data_path .. FILESEP .. PROMPTS_FILE_NAME
 
-  require("backend").write_prompt_set(file_path, prompt_set)
+  backend.write_prompt_set(file_path, prompt_set)
 end
 
 return M
