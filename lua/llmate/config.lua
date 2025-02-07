@@ -92,13 +92,7 @@ M.load_prompt_set = function(plugin_config)
     return DEFAULT_PROMPT_SET
   end
 
-  local prompt_set = backend.read_prompt_set(file_path)
-  print("read prompt set from: " .. file_path)
-  -- print all in prompt_set
-  for k, v in pairs(prompt_set) do
-    print(k, v)
-  end
-  return prompt_set
+  return backend.read_prompt_set(file_path)
 end
 
 M.write_prompt_set = function(plugin_config, prompt_set)
