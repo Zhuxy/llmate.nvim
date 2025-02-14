@@ -2,15 +2,20 @@ local debug = require("llmate.debug")
 
 local M = {}
 
-local backend = os.getenv("LLMATE_BACKEND")
-if backend == "rust" then
-  backend = "rust"
-else
-  -- use curl by default
-  backend = "curl"
-end
+-- 修改这部分代码
+local backend = nil
 
-debug.log("LLMATE_BACKEND: " .. backend)
+function M.setup(opts)
+  -- 通过 setup 配置设置后端类型
+  backend = opts and opts.backend or os.getenv("LLMATE_BACKEND")
+  if backend == "rust" then
+    backend = "rust"
+  else
+    -- use curl by default
+    backend = "curl"
+  end
+  debug.log("LLMATE_BACKEND: " .. backend)
+end
 
 local function curl_chat_stream(chat_req, callback)
   local url = string.format("%s/chat/completions", chat_req.api_base)
@@ -65,7 +70,7 @@ local function curl_chat_stream(chat_req, callback)
       for _, line in ipairs(lines) do
         if line ~= "" then
           if line:match('^data: %[DONE%]') then
-            print("[END] Stream finished.")
+            debug.log("[END] Stream finished.")
             vim.schedule(function()
               callback("[[DONE]]")
             end)
@@ -97,7 +102,7 @@ local function curl_chat_stream(chat_req, callback)
                   debug.log(choice.delta.content)
                 end
                 if choice.finish_reason == "stop" then
-                  print("[END] Stream completed.")
+                  debug.log("[END] Stream completed.")
                 end
               end
             else

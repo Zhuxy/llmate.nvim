@@ -1,6 +1,7 @@
 -- main module file
 local module = require("llmate.module")
 local debug = require("llmate.debug")
+local backend = require("llmate.backend")
 
 ---@class Config Configuration for the llmate.nvim plugin
 ---@field key string Keybinding to launch the dialog (default: <leader>g)
@@ -44,6 +45,8 @@ M.setup = function(args)
     set_opfunc(require('llmate').open_dialog)
     return "g@"
   end, { expr = true })
+  
+  backend.setup(M.config)
 end
 
 ---Open the text generation dialog with selected text
