@@ -57,9 +57,6 @@ local function handle_generate(config_set, prompt_set, selected_text, signal, re
   debug.log("Generating text with prompt: %s", prompt)
   debug.log("Selected text: %s", text)
 
-  -- print("~~~~~~~~~prompt~~~~~~~~~~~\n")
-  -- print(prompt_template)
-
   signal.result = ""
 
   vim.defer_fn(function()
@@ -79,11 +76,6 @@ local function handle_generate(config_set, prompt_set, selected_text, signal, re
         signal.first_loading = false
         signal.is_cancel = false
         renderer:get_component_by_id("cancel_btn"):focus()
-
-        -- print("~~~~~~~~~result~~~~~~~~~~~\n")
-        -- print(signal.result:get_value())
-        -- print("~~~~~~~~~ end  ~~~~~~~~~~~\n")
-
         return
       end
 
@@ -350,17 +342,11 @@ M.open_dialog = function(plugin_config, selected_text)
     prompt_set = prompt_set,
     user_prompt = prompt_set.prompts[1].text,
     result = "",
-
-    -- status for showing append/replace/yank buttons
     is_loading = false,
     first_loading = true,
-
-    -- status for editing or saving prompt
     prompt_editing = false,
     prompt_saving = false,
     prompt_to_save = "",
-
-    -- status for controlling cancel
     is_cancel = false,
   })
 
