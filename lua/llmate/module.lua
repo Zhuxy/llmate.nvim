@@ -167,7 +167,7 @@ end
 ---@param renderer Renderer NUI renderer instance
 ---@return nil
 local function handle_yank(signal, renderer)
-  vim.fn.setreg("p", signal.result:get_value())
+  vim.fn.setreg("\"", signal.result:get_value())
   renderer:close()
 end
 
@@ -361,13 +361,13 @@ M.open_dialog = function(plugin_config, selected_text)
         id = "text",
         size = 6,
         buf = buf0,
-        border_label = "🤖 I see what you see ...",
+        border_label = "📝 Selected Text",
         filetype = selected_text.filetype,
       }),
       n.select({
         id = "selection",
         size = 3,
-        border_label = "💡 What do you want for me?",
+        border_label = "🎯 Select Prompt",
         autofocus = true,
         data = signal.prompt_set:map(function(ps)
           local selection = {}
@@ -388,7 +388,7 @@ M.open_dialog = function(plugin_config, selected_text)
       }),
       n.text_input({
         id = "user_prompt",
-        border_label = "👌 Ok I will tell you ...",
+        border_label = "🎨 Edit Prompt",
         size = 4,
         value = signal.user_prompt,
         on_change = function(value)
@@ -406,7 +406,7 @@ M.open_dialog = function(plugin_config, selected_text)
         prefix = " > ",
         placeholder = "Use same name to overwrite",
         border_label = {
-          text = "✍️ Save current prompt to ...",
+          text = "💾 Save Prompt",
           align = "center",
         },
         hidden = signal.prompt_saving:negate(),
@@ -420,14 +420,14 @@ M.open_dialog = function(plugin_config, selected_text)
         buf = buf,
         autoscroll = true,
         filetype = "markdown",
-        border_label = "📖 Here is what you get: ",
+        border_label = "🔍 Generated Result",
         is_focusable = true,
         hidden = signal.first_loading,
       }),
       n.columns(
         {
           size = 1,
-          border_label = "Actions",
+          border_label = "⚡ Actions",
         },
         n.gap(2),
         n.button({
