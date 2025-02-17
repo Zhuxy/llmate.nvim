@@ -35,15 +35,17 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
     "zhuxy/llmate.nvim",
-    build = "make",
-    config = function()
-        local config = {
-            -- optional configuration
-            key = "<leader>g",  -- default keybinding
-            data_path = nil,    -- custom path for config files
-        }
-        require("llmate.nvim").setup(config)
+    build = function(plugin)
+        if plugin.opts and plugin.opts.backend and plugin.opts.backend == "rust" then
+            vim.fn.system({ "make", "-C", plugin.dir })
+        end
     end,
+    opts = {
+        backend = "curl", -- or "rust"
+        key = "<leader>g", -- default keybinding
+        debug = false, -- enable debug mode
+        data_path = nil, -- custom path for config files
+    },
     dependencies = "grapp-dev/nui-components.nvim",
 }
 ```
@@ -84,14 +86,15 @@ Default prompts and template will be created at `~/.config/llmate/prompts.yaml` 
 
 ## Requirements
 
-- Neovim >= 0.8.0
+- Neovim >= 0.10.0
 - Git (for installation)
 - Make command
 - Rust environment (cargo, rustc)
+- curl (in $Path)
 
 ### Installing Rust
 
-The plugin requires a Rust environment for compiling its native components. You can install Rust using rustup:
+The plugin requires a Rust environment for compiling its native components if you use Rust as backend. You can install Rust using rustup:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
